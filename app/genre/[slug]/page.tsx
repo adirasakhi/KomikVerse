@@ -18,8 +18,7 @@ async function getComicsByGenre(slug: string, page: number): Promise<Comic[]> {
     if (!res.ok) return [];
     
     const json: ApiResponse = await res.json();
-    return json.success ? (json.komikList || []) : [];
-
+return json.success ? (json.komikList || []) : [];
   } catch (error) {
     console.error("Genre Fetch Error:", error);
     return [];
