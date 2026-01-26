@@ -30,8 +30,7 @@ async function getLibrary(page: number, type?: string, genre?: string): Promise<
     if (!res.ok) return [];
     
     const json: ApiResponse = await res.json();
-    return json.success ? (json.komikList || []) : [];
-
+return json.success ? (json.komikList || []) : [];
   } catch (error) {
     console.error("Library Error:", error);
     return [];
