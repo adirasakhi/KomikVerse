@@ -21,8 +21,9 @@ async function getSearchResults(query: string): Promise<Comic[]> {
         return [];
     }
     
-    const json: ApiResponse = await res.json();
-    return json.success ? json.komikList : [];
+const json: ApiResponse = await res.json();
+    // --- PERBAIKAN DI SINI ---
+    return json.success ? (json.komikList || []) : [];
 
   } catch (error) {
     console.error("Search Fetch Error:", error);
