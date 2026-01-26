@@ -13,11 +13,12 @@ export default function ComicCard({ comic }: ComicCardProps) {
     <div className="group relative bg-slate-900 rounded-xl overflow-hidden border border-slate-800 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10">
       {/* --- Cover Image --- */}
       <div className="relative aspect-[3/4] overflow-hidden">
+        {/* Type Label (Kasih fallback kalau type kosong) */}
         <span className="absolute top-2 left-2 z-10 px-2 py-1 text-[10px] font-bold tracking-wider text-slate-200 bg-slate-950/80 backdrop-blur-sm rounded uppercase border border-slate-700">
-          {comic.type}
+          {comic.type || 'Manga'} 
         </span>
         
-        {/* Tampilkan Rating jika ada (biasanya di Library ada) */}
+        {/* Tampilkan Rating jika ada */}
         {comic.rating && (
            <span className="absolute top-2 right-2 z-10 px-2 py-1 text-[10px] font-bold text-yellow-400 bg-black/70 backdrop-blur-sm rounded border border-yellow-500/30 flex items-center gap-1">
              ⭐ {comic.rating}
@@ -54,7 +55,9 @@ export default function ComicCard({ comic }: ComicCardProps) {
                 {comic.chapters![0].title.replace('Chapter ', 'Ch. ')}
               </Link>
               <span className="text-[10px] text-slate-500 ml-2">
-                {comic.chapters![0].date.replace(' lalu', '')}
+                {/* --- PERBAIKAN DI SINI --- */}
+                {/* Pake ?.replace() dan fallback || '' */}
+                {comic.chapters![0].date?.replace(' lalu', '') || ''}
               </span>
             </>
           ) : (
