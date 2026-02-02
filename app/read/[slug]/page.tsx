@@ -35,11 +35,12 @@ interface ApiResponse {
 
 // --- 2. Fetching Data ---
 async function getChapterData(slug: string): Promise<ChapterData | null> {
+  // Pastikan URL API backend kamu benar
   const url = `https://www.sankavollerei.com/comic/komikindo/chapter/${slug}`;
 
   try {
     const res = await fetch(url, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 3600 }, // Cache data chapter selama 1 jam
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
       }
@@ -63,7 +64,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!chapter) return { title: 'Chapter Tidak Ditemukan - KomikVerse' };
 
   const cleanChapterTitle = chapter.title.replace(/Komik\s+/i, '').replace(/\n/g, ' ').trim();
-  const comicTitle = chapter.thumbnail?.title.replace('Komik ', '') || '';
+  const comicTitle = chapter.thumbnail?.title.replace('Komik ', '') || cleanChapterTitle;
 
   return {
     title: `${comicTitle} - ${cleanChapterTitle} | Baca di KomikVerse`,
@@ -74,6 +75,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 // --- 4. Komponen Navigasi ---
 const ChapterNav = ({ nav }: { nav: Navigation }) => (
   <div className="flex justify-between items-center gap-4 max-w-3xl mx-auto px-4 py-6">
+    {/* Tombol Previous */}
     {nav.prev ? (
       <Link 
         href={`/read/${nav.prev}`}
@@ -87,6 +89,7 @@ const ChapterNav = ({ nav }: { nav: Navigation }) => (
       </button>
     )}
 
+    {/* Tombol Next */}
     {nav.next ? (
       <Link 
         href={`/read/${nav.next}`}
@@ -116,6 +119,7 @@ export default async function ReadPage({ params }: { params: Promise<{ slug: str
   return (
     <main className="min-h-screen bg-slate-950 pb-20 font-sans">
       
+      {/* Simpan History Baca */}
       <HistorySaver 
         title={comicTitle}
         slug={chapter.allChapterSlug}
@@ -124,11 +128,11 @@ export default async function ReadPage({ params }: { params: Promise<{ slug: str
         chapterSlug={slug}
       />
       
-      {/* HEADER STICKY */}
+      {/* --- HEADER STICKY --- */}
       <div className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shadow-xl">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
           
-          {/* Back Button */}
+          {/* Back Button ke Detail Komik */}
           <Link 
             href={`/komik/${chapter.allChapterSlug}`} 
             className="flex-shrink-0 flex items-center gap-2 text-indigo-400 font-bold hover:text-indigo-300 transition-colors text-sm"
@@ -137,7 +141,7 @@ export default async function ReadPage({ params }: { params: Promise<{ slug: str
             <span className="hidden md:inline">Detail</span>
           </Link>
 
-          {/* JUDUL TENGAH */}
+          {/* Judul Tengah (Truncated) */}
           <h1 className="flex-1 text-sm md:text-base font-bold text-slate-200 truncate text-center">
              <span className="text-slate-400 font-normal mr-2 hidden sm:inline">{comicTitle}</span>
              <span className="text-slate-600 mx-1 hidden sm:inline">|</span>
@@ -154,22 +158,21 @@ export default async function ReadPage({ params }: { params: Promise<{ slug: str
       {/* Navigasi Atas */}
       <ChapterNav nav={chapter.navigation} />
 
-      {/* Reader Area */}
+      {/* --- READER AREA (GAMBAR KOMIK) --- */}
       <div className="w-full max-w-3xl mx-auto bg-black min-h-screen shadow-2xl overflow-hidden">
         {chapter.images && chapter.images.length > 0 ? (
           chapter.images.map((item) => (
             <div key={item.id} className="relative w-full">
-              {/* GAMBAR MENGGUNAKAN PROXY
-                  - src mengarah ke /api/image
-                  - url asli di-encode biar karakter aneh gak ngerusak link
+              {/* SOLUSI ANTI-BLOCK & IMAGE LOOPING:
+                 Gunakan layanan wsrv.nl sebagai proxy gambar eksternal.
+                 - url: URL gambar asli
+                 - output=webp: Otomatis convert ke WebP (lebih ringan)
               */}
               <img 
-                src={`/api/image?url=${encodeURIComponent(item.url)}`} 
+                src={`https://wsrv.nl/?url=${encodeURIComponent(item.url)}&output=webp`}
                 alt={`${comicTitle} - ${cleanChapterTitle} - Page ${item.id}`}
                 className="w-full h-auto block" 
                 loading="lazy"
-                // ReferrerPolicy buat keamanan tambahan
-                referrerPolicy="no-referrer"
               />
             </div>
           ))
