@@ -9,13 +9,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // 1. Decode URL dengan aman (kadang ada karakter aneh)
+    // 1. Decode URL target
     const targetUrl = decodeURIComponent(imageUrl);
 
-    // 2. Fetch gambar dengan Header Penyamaran Full
+    // 2. Fetch ke server asli dengan Header Penyamaran
     const response = await fetch(targetUrl, {
       method: 'GET',
-      // PENTING: cache 'no-store' biar server Next.js gak nyimpen gambar error/banner
+      // PENTING: No-store biar Next.js gak nyimpen cache gambar rusak/banner
       cache: 'no-store', 
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -31,20 +31,21 @@ export async function GET(request: NextRequest) {
     });
 
     if (!response.ok) {
-      // Kalau gagal, coba return statusnya biar ketahuan di Inspect Element
       return new NextResponse(`Failed to fetch image. Status: ${response.status}`, { status: response.status });
     }
 
-    // 3. Ambil data gambar
+    // 3. Ambil data binary gambar
     const imageBuffer = await response.arrayBuffer();
     
-    // 4. Pastikan Content-Type bener
+    // 4. Deteksi otomatis: Apakah ini JPG, PNG, atau lainnya?
+    // Kita ambil langsung dari header server aslinya.
     const contentType = response.headers.get('content-type') || 'image/jpeg';
     
+    // 5. Kirim balik ke browser dengan format yang benar
     return new NextResponse(imageBuffer, {
       headers: {
-        'Content-Type': contentType,
-        // Cache di BROWSER user aja (biar cepet), tapi server kita tetep request baru
+        'Content-Type': contentType, // <-- Ini kuncinya biar JPG/PNG otomatis
+        // Cache di browser user aja (biar cepet loading page berikutnya)
         'Cache-Control': 'public, max-age=86400, stale-while-revalidate=3600',
         'Access-Control-Allow-Origin': '*',
       },
