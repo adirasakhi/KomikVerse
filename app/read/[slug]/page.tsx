@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Metadata } from 'next'; // Import Metadata buat SEO
+import { Metadata } from 'next';
 import HistorySaver from '@/components/HistorySaver';
 
 // --- 1. Definisi Tipe Data ---
@@ -55,18 +55,18 @@ async function getChapterData(slug: string): Promise<ChapterData | null> {
   }
 }
 
-// --- 3. Generate Metadata (Buat Judul Tab Browser) ---
+// --- 3. Generate Metadata (SEO) ---
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const chapter = await getChapterData(slug);
   
-  if (!chapter) return { title: 'Chapter Tidak Ditemukan - MangaSkuy' };
+  if (!chapter) return { title: 'Chapter Tidak Ditemukan - KomikVerse' };
 
   const cleanChapterTitle = chapter.title.replace(/Komik\s+/i, '').replace(/\n/g, ' ').trim();
   const comicTitle = chapter.thumbnail?.title.replace('Komik ', '') || '';
 
   return {
-    title: `${comicTitle} - ${cleanChapterTitle} | Baca di MangaSkuy`,
+    title: `${comicTitle} - ${cleanChapterTitle} | Baca di KomikVerse`,
     description: `Baca komik ${comicTitle} ${cleanChapterTitle} bahasa Indonesia gratis.`,
   };
 }
@@ -124,7 +124,7 @@ export default async function ReadPage({ params }: { params: Promise<{ slug: str
         chapterSlug={slug}
       />
       
-      {/* HEADER STICKY: Update Tampilan Judul */}
+      {/* HEADER STICKY */}
       <div className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shadow-xl">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
           
@@ -137,7 +137,7 @@ export default async function ReadPage({ params }: { params: Promise<{ slug: str
             <span className="hidden md:inline">Detail</span>
           </Link>
 
-          {/* JUDUL TENGAH (KOMIK - CHAPTER) */}
+          {/* JUDUL TENGAH */}
           <h1 className="flex-1 text-sm md:text-base font-bold text-slate-200 truncate text-center">
              <span className="text-slate-400 font-normal mr-2 hidden sm:inline">{comicTitle}</span>
              <span className="text-slate-600 mx-1 hidden sm:inline">|</span>
@@ -159,11 +159,17 @@ export default async function ReadPage({ params }: { params: Promise<{ slug: str
         {chapter.images && chapter.images.length > 0 ? (
           chapter.images.map((item) => (
             <div key={item.id} className="relative w-full">
+              {/* GAMBAR MENGGUNAKAN PROXY
+                  - src mengarah ke /api/image
+                  - url asli di-encode biar karakter aneh gak ngerusak link
+              */}
               <img 
                 src={`/api/image?url=${encodeURIComponent(item.url)}`} 
                 alt={`${comicTitle} - ${cleanChapterTitle} - Page ${item.id}`}
                 className="w-full h-auto block" 
                 loading="lazy"
+                // ReferrerPolicy buat keamanan tambahan
+                referrerPolicy="no-referrer"
               />
             </div>
           ))
@@ -180,7 +186,7 @@ export default async function ReadPage({ params }: { params: Promise<{ slug: str
       
       <div className="text-center text-slate-600 text-xs py-10 px-4">
         <p>Tekan tombol navigasi di atas untuk pindah chapter.</p>
-        <p className="mt-2 text-slate-700">MangaSkuy Reader v1.0</p>
+        <p className="mt-2 text-slate-700">KomikVerse Reader v1.0</p>
       </div>
 
     </main>
