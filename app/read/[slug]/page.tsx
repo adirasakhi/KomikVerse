@@ -160,7 +160,7 @@ export default async function ReadPage({ params }: { params: Promise<{ slug: str
           chapter.images.map((item) => (
             <div key={item.id} className="relative w-full">
               <img 
-                src={item.url} 
+                src={`/api/image?url=${encodeURIComponent(item.url)}`} 
                 alt={`${comicTitle} - ${cleanChapterTitle} - Page ${item.id}`}
                 className="w-full h-auto block" 
                 loading="lazy"
