@@ -1,4 +1,3 @@
-// src/app/api/image/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -10,29 +9,44 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Fetch gambar asli dengan header "Palsu" biar dikira akses dari web aslinya
-    const response = await fetch(imageUrl, {
+    // 1. Decode URL dengan aman (kadang ada karakter aneh)
+    const targetUrl = decodeURIComponent(imageUrl);
+
+    // 2. Fetch gambar dengan Header Penyamaran Full
+    const response = await fetch(targetUrl, {
+      method: 'GET',
+      // PENTING: cache 'no-store' biar server Next.js gak nyimpen gambar error/banner
+      cache: 'no-store', 
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
-        'Referer': 'https://komikindo.ch/', // <-- KUNCI UTAMA: Nipu server gambar
-        'Origin': 'https://komikindo.ch/'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://komikindo.ch/',
+        'Origin': 'https://komikindo.ch/',
+        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+        'Sec-Fetch-Dest': 'image',
+        'Sec-Fetch-Mode': 'no-cors',
+        'Sec-Fetch-Site': 'cross-site',
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache'
       }
     });
 
     if (!response.ok) {
-      return new NextResponse(`Failed to fetch image: ${response.status}`, { status: response.status });
+      // Kalau gagal, coba return statusnya biar ketahuan di Inspect Element
+      return new NextResponse(`Failed to fetch image. Status: ${response.status}`, { status: response.status });
     }
 
-    // Ambil data gambar (buffer)
+    // 3. Ambil data gambar
     const imageBuffer = await response.arrayBuffer();
     
-    // Kirim balik ke browser dengan Content-Type yang sesuai
+    // 4. Pastikan Content-Type bener
     const contentType = response.headers.get('content-type') || 'image/jpeg';
     
     return new NextResponse(imageBuffer, {
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=31536000, immutable', // Cache biar hemat bandwidth
+        // Cache di BROWSER user aja (biar cepet), tapi server kita tetep request baru
+        'Cache-Control': 'public, max-age=86400, stale-while-revalidate=3600',
+        'Access-Control-Allow-Origin': '*',
       },
     });
 
@@ -41,4 +55,3 @@ export async function GET(request: NextRequest) {
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
-
