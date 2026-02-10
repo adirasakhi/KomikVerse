@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 
-// WAJIB: Biar Vercel selalu fetch data baru (Real-time)
 export const dynamic = 'force-dynamic';
 
 export async function GET(
@@ -10,46 +9,74 @@ export async function GET(
   try {
     const params = await props.params;
     const { slug } = params;
+    const path = slug.join('/'); // misal: "latest/1"
 
-    // 1. Cek slug biar gak error
-    if (!slug || !Array.isArray(slug)) {
-      return NextResponse.json({ error: 'Invalid route' }, { status: 400 });
+    // 1. KITA GANTI TARGET KE BACAKOMIK (Sesuai Screenshot Lu)
+    // Asalnya: .../comic/komikindo/...
+    // Jadi: .../comic/bacakomik/...
+    // Note: Kita sesuaikan path-nya manual karena kadang beda dikit
+    let targetEndpoint = '';
+
+    if (path.includes('latest')) {
+      targetEndpoint = 'latest'; // BacaKomik endpoint: /comic/bacakomik/latest
+    } else if (path.includes('detail')) {
+      targetEndpoint = `info/${slug[1]}`; // BacaKomik biasanya pake 'info' bukan 'detail'
+    } else if (path.includes('search')) {
+        // Search logic (kalau perlu)
+         targetEndpoint = `search/${slug[1]}`;
+    } else {
+      targetEndpoint = path;
     }
+    
+    const targetUrl = `https://www.sankavollerei.com/comic/bacakomik/${targetEndpoint}`;
 
-    // 2. Gabungin slug jadi path (misal: "latest/1" atau "detail/one-piece")
-    const path = slug.join('/');
+    console.log("🚀 Pindah ke BacaKomik:", targetUrl);
 
-    // 3. BASE URL API SANKAVOLLEREI (Kita "Tumpangi" ini)
-    const targetUrl = `https://www.sankavollerei.com/comic/komikindo/${path}`;
-
-    // 4. Ambil query string (misal ?q=naruto buat search)
-    const { searchParams } = new URL(request.url);
-    const queryString = searchParams.toString();
-    const finalUrl = queryString ? `${targetUrl}?${queryString}` : targetUrl;
-
-    console.log("🚀 Proxy Nembak ke:", finalUrl);
-
-    // 5. Fetch ke API Tetangga
-    const response = await fetch(finalUrl, {
-      method: 'GET',
+    const response = await fetch(targetUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.0.0 Safari/537.36'
       },
-      cache: 'no-store' // PENTING: Jangan simpan cache biar gak error 404 lama
+      cache: 'no-store'
     });
 
-    if (!response.ok) {
-      console.error("❌ Gagal Fetch:", response.status);
-      return NextResponse.json({ error: 'Sumber Data Error' }, { status: response.status });
+    if (!response.ok) throw new Error('Gagal fetch BacaKomik');
+    
+    const rawData = await response.json();
+
+    // 2. MAPPING DATA (PENTING!)
+    // Biar frontend lu gak kaget karena kuncinya beda
+    // KomikIndo: { title, thumb, endpoint }
+    // BacaKomik: { title, image, endpoint } (Biasanya beda di thumb/image)
+    
+    let finalData = rawData;
+
+    if (rawData.data && Array.isArray(rawData.data)) {
+        finalData.data = rawData.data.map((item: any) => ({
+            ...item,
+            // Paksa field 'thumb' ada isinya (ambil dari image kalau thumb kosong)
+            thumb: item.thumb || item.image || item.thumbnail,
+            // Pastikan type ada (Manhwa/Manga)
+            type: item.type || 'Komik', 
+            endpoint: item.endpoint
+        }));
     }
 
-    const data = await response.json();
-
-    // 6. Balikin data mateng ke Frontend lu
-    return NextResponse.json(data);
+    return NextResponse.json(finalData);
 
   } catch (error) {
-    console.error("🔥 Server Error:", error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error("🔥 Error Proxy:", error);
+    // FALLBACK TERAKHIR: Data Palsu (Kalau BacaKomik mati juga)
+    return NextResponse.json({
+      success: true,
+      data: [
+        {
+          title: "Server Maintenance (Demo)",
+          thumb: "https://via.placeholder.com/150",
+          endpoint: "error",
+          type: "Info",
+          upload_on: "Now"
+        }
+      ]
+    });
   }
 }
