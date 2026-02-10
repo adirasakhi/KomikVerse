@@ -5,6 +5,8 @@ import { getHistory, HistoryItem } from '@/lib/history';
 import ComicCard from '@/components/ComicCard';
 import PageHeader from '@/components/PageHeader'; // Import komponen baru
 import { Comic } from '@/types';
+export const dynamic = 'force-dynamic';
+
 
 export default function HistoryPage() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
