@@ -2,6 +2,7 @@ import { ApiResponse } from '@/types';
 import HomeLatest from '@/components/HomeLatest';
 import SearchBar from '@/components/SearchBar'; // Import ini
 import Link from 'next/link';
+export const dynamic = 'force-dynamic';
 
 
 // Update fungsi ini
