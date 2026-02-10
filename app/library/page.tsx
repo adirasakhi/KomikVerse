@@ -2,6 +2,8 @@ import Link from 'next/link';
 import ComicCard from '@/components/ComicCard';
 import PageHeader from '@/components/PageHeader';
 import { Comic, ApiResponse } from '@/types';
+export const dynamic = 'force-dynamic';
+
 
 // Update Fetcher: Handle Capitalization
 async function getLibrary(page: number, type?: string, genre?: string): Promise<Comic[]> {
