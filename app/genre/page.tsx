@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import PageHeader from '@/components/PageHeader';
+export const dynamic = 'force-dynamic';
+
 // 1. Update Interface sesuai JSON lo
 interface Genre {
   name: string;
