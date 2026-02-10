@@ -2,6 +2,8 @@ import Link from 'next/link';
 import ComicCard from '@/components/ComicCard';
 import PageHeader from '@/components/PageHeader'; // <-- Import komponen baru
 import { Comic, ApiResponse } from '@/types';
+export const dynamic = 'force-dynamic';
+
 
 // Fetch Komik berdasarkan Genre lewat endpoint Library
 async function getComicsByGenre(slug: string, page: number): Promise<Comic[]> {
