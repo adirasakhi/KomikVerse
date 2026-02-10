@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import HistorySaver from '@/components/HistorySaver';
+export const dynamic = 'force-dynamic';
 
 // --- 1. Definisi Tipe Data ---
 interface ImageItem {
